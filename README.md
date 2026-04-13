@@ -1,86 +1,80 @@
+
 Policy Impact Simulator (India)
-An interactive data science project that answers a practical policy question:
-“Which districts are most affected if government welfare spending is reduced?”
-Instead of just building a vulnerability index, this project simulates real-world policy cuts and shows their impact at the district level.
+
+An interactive data science project that answers a simple but important question:
+
+Which districts are most affected if government welfare spending is reduced?
+
+Instead of just building a vulnerability index, this project simulates policy cuts and shows their impact at the district level.
 
 What This Project Does
 Combines multiple public datasets (Census, NFHS, SC/ST, etc.)
 Builds a district-level vulnerability score
 Simulates policy cuts (e.g., MGNREGA, welfare spending)
-Shows how vulnerability changes when support is reduced
-Provides a simple web interface (Flask) to explore results
-
+Shows how vulnerability changes after the cut
+Provides a simple Flask-based web interface
 Key Features
 District-level analysis (Maharashtra)
-Composite vulnerability scoring using:
+Composite vulnerability score using:
 ST population %
 SC population %
 Literacy rate
 Deprivation score (education + clean fuel access)
 Policy simulation:
 Adjust % cut in welfare spending
-See updated vulnerability instantly
-Clean and merged real-world datasets
-
+Instantly see updated vulnerability
+Cleaned and merged real-world datasets
 Tech Stack
 Python (Pandas, NumPy)
-Flask (Web app)
-Data Sources:
+Flask (web app)
+Data sources:
 Census 2011
 NFHS-5
-SC/ST population data
+SC/ST datasets
 Jupyter Notebook (data processing)
-
-
-## Project Files
-
-- app.py - Flask app for running the policy simulation
-- final_dataset.csv - cleaned district-level dataset used for modeling
-- templates/index.html - frontend interface (district selection + simulation)
-- govt.ipynb - data cleaning, merging, and feature engineering
-
-
+Project Files
+app.py – Flask backend for simulation
+final_dataset.csv – merged district dataset
+templates/index.html – user interface
+govt.ipynb – data cleaning and feature engineering
 How to Run
-1. Clone the repo
 git clone https://github.com/your-username/policy-impact-simulator-india.git
 cd policy-impact-simulator-india
-2. Install dependencies
 pip install pandas flask
-3. Run the app
 python app.py
-4. Open in browser
-http://127.0.0.1:5000/
 
+Open in browser:
+
+http://127.0.0.1:5000/
 Example Use Case
 Select a district (e.g., Nagpur)
 Enter a policy cut (e.g., 20%)
-The model recalculates vulnerability based on reduced support
+View updated vulnerability score
 
 This helps answer:
-Which districts are most sensitive to policy cuts?
-Where should policymakers avoid reducing spending?
-Which regions need targeted protection?
 
+Which districts are most sensitive to cuts?
+Where should spending not be reduced?
+Which areas need protection?
 Why This Project Matters
-Most data science projects stop at prediction.
-This project goes further:
-Connects policy → impact
-Focuses on decision-making
-Builds a tool that NGOs, analysts, or journalists could actually use
 
+Most data science projects stop at prediction.
+
+This one focuses on decision-making:
+
+connects policy → impact
+provides an interactive tool
+has a real-world use case
 Limitations
 Currently limited to Maharashtra
-MGNREGA integration is basic (can be improved with richer data)
+MGNREGA integration is basic
 Uses proxy indicators for deprivation
-
 Future Improvements
-Add more states
-Improve MGNREGA dependency modeling
+Expand to other states
+Improve MGNREGA modeling
 Add time trends (NFHS-4 vs NFHS-5)
-Deploy online (Render / Railway)
-Add visual charts (SHAP, maps)
+Deploy online
+Add visualizations (charts, maps)
+Author
 
-Author 
 Nayanah Soju
-
-
