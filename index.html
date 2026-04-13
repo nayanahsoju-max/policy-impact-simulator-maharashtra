@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Policy Cut Impact Simulator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+ 
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+ 
+  /* ── Header ── */
+  .header {
+    margin-bottom: 1.5rem;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 4px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #666;
+  }
+ 
+  /* ── Cards ── */
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+ 
+  /* ── Controls ── */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .control-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  select {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #111;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+  }
+  select:focus { outline: 2px solid #1D9E75; outline-offset: 1px; }
+ 
+  /* program pills */
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 13px;
+    font-size: 12px;
+    border-radius: 99px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .pill:hover { border-color: #1D9E75; color: #1D9E75; }
+  .pill.active { background: #1D9E75; border-color: #1D9E75; color: #fff; font-weight: 500; }
+ 
+  /* slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-row span.edge {
+    font-size: 12px;
+    color: #aaa;
+    min-width: 24px;
+  }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 99px;
+    background: linear-gradient(to right, #1D9E75 var(--pct, 25%), #e5e7eb var(--pct, 25%));
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #1D9E75;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .cut-readout {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111;
+    min-width: 56px;
+    text-align: right;
+  }
+ 
+  /* submit button */
+  .btn-simulate {
+    width: 100%;
+    padding: 11px;
+    background: #1D9E75;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.25rem;
+    transition: background 0.15s;
+  }
+  .btn-simulate:hover { background: #0F6E56; }
+ 
+  /* ── Summary stats ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .stat {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .stat .s-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .stat .s-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+  }
+  .stat .s-val.low    { color: #1D9E75; }
+  .stat .s-val.moderate { color: #BA7517; }
+  .stat .s-val.high   { color: #D85A30; }
+  .stat .s-val.very-high { color: #A32D2D; }
+ 
+  /* ── District fact strip ── */
+  .fact-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .fact-chip {
+    background: #f0faf5;
+    border: 1px solid #9FE1CB;
+    color: #0F6E56;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 99px;
+  }
+ 
+  /* ── Bar chart ── */
+  .breakdown-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 14px;
+  }
+  .bar-row { margin-bottom: 14px; }
+  .bar-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+    gap: 8px;
+  }
+  .bar-name  { font-size: 13px; color: #111; font-weight: 500; }
+  .bar-why   { font-size: 11px; color: #999; }
+  .bar-score { font-size: 13px; font-weight: 600; color: #111; white-space: nowrap; }
+  .bar-track {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+  }
+ 
+  /* ── Insight box ── */
+  .insight {
+    margin-top: 1rem;
+    padding: 11px 14px;
+    background: #f0faf5;
+    border-left: 3px solid #1D9E75;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.65;
+  }
+  .insight strong { color: #111; }
+ 
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #aaa;
+    font-size: 14px;
+  }
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+ 
+  @media (max-width: 520px) {
+    .controls-grid  { grid-template-columns: 1fr; }
+    .summary-grid   { grid-template-columns: 1fr 1fr; }
+    .summary-grid .stat:last-child { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+ 
+  <div class="header">
+    <h1>Policy cut impact simulator</h1>
+    <p>Select a district, choose a program, drag the slider — see who gets hurt and why.</p>
+  </div>
+ 
+  <!-- Controls -->
+  <div class="card">
+    <form method="POST" id="sim-form">
+ 
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>District</label>
+          <select name="district" id="district-sel">
+            {% for d in districts %}
+              <option value="{{ d }}"
+                {% if selected_district == d %}selected{% endif %}>
+                {{ d | title }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+ 
+        <div class="control-group">
+          <label>Program</label>
+          <div class="pills">
+            <span class="pill active" data-prog="mgnrega">MGNREGA</span>
+            <span class="pill" data-prog="food">Food subsidy</span>
+            <span class="pill" data-prog="housing">Housing</span>
+          </div>
+          <input type="hidden" name="program" id="prog-input" value="mgnrega">
+        </div>
+      </div>
+ 
+      <div class="control-group" style="margin-bottom: 1rem;">
+        <label>Budget cut — <span id="cut-display">20</span>%</label>
+        <div class="slider-row">
+          <span class="edge">0%</span>
+          <input type="range" id="cut-slider" name="cut" min="0" max="80"
+                 value="{{ result.cut if result else 20 }}" step="1">
+          <span class="edge">80%</span>
+          <span class="cut-readout"><span id="cut-val">{{ result.cut if result else 20 }}</span>%</span>
+        </div>
+      </div>
+ 
+      <button type="submit" class="btn-simulate">Run simulation</button>
+    </form>
+  </div>
+ 
+  <!-- Results -->
+  {% if result %}
+ 
+  <!-- Summary row -->
+  <div class="summary-grid">
+    <div class="stat">
+      <div class="s-label">Vulnerability score</div>
+      <div class="s-val">{{ result.total }}</div>
+    </div>
+    <div class="stat">
+      <div class="s-label">Risk level</div>
+      <div class="s-val {{ result.risk | lower | replace(' ', '-') }}">{{ result.risk }}</div>
+    </div>
+    <div class="stat">
+      <div class="s-label">Most affected</div>
+      <div class="s-val" style="font-size: 14px; line-height: 1.3;">{{ result.top_group }}</div>
+    </div>
+  </div>
+ 
+  <!-- District fact chips -->
+  <div class="fact-strip">
+    <span class="fact-chip">ST: {{ result.st_pct }}%</span>
+    <span class="fact-chip">SC: {{ result.sc_pct }}%</span>
+    <span class="fact-chip">Literacy: {{ result.literacy }}%</span>
+    <span class="fact-chip">Deprivation index: {{ result.dep_score }}</span>
+    <span class="fact-chip">MGNREGA dependency: {{ result.mgn_dep }}</span>
+  </div>
+ 
+  <!-- Bar breakdown -->
+  <div class="card">
+    <div class="breakdown-title">Impact by demographic group — {{ result.cut }}% cut to {{ result.district }}</div>
+ 
+    {% set bar_meta = [
+      ("ST population",      "#185FA5", "Remote rural, highest program reliance"),
+      ("SC population",      "#BA7517", "Wage labour concentration in schemes"),
+      ("Low literacy",       "#7F77DD", "Fewer private-sector alternatives"),
+      ("Deprivation",        "#D85A30", "Already lack fuel and education access"),
+      ("MGNREGA dependency", "#1D9E75", "Direct employment days lost"),
+    ] %}
+ 
+    {% set max_val = result.breakdown.values() | max %}
+ 
+    {% for label, color, why in bar_meta %}
+      {% set score = result.breakdown[label] %}
+      {% set pct   = (score / max_val * 100) | round(1) %}
+      <div class="bar-row">
+        <div class="bar-meta">
+          <span>
+            <span class="bar-name">{{ label }}</span>
+            <span class="bar-why"> — {{ why }}</span>
+          </span>
+          <span class="bar-score">{{ score }}</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: {{ pct }}%; background: {{ color }};"></div>
+        </div>
+      </div>
+    {% endfor %}
+ 
+    <div class="insight">
+      A <strong>{{ result.cut }}%</strong> budget cut leaves
+      <strong>{{ result.top_group | lower }}</strong> most exposed
+      in <strong>{{ result.district }}</strong>
+      {% if result.st_pct > 30 %}
+        — tribal population stands at {{ result.st_pct }}%, among the highest in Maharashtra,
+        compounding the effect of any program withdrawal.
+      {% elif result.dep_score > 0.5 %}
+        — a deprivation index of {{ result.dep_score }} signals that households here have
+        almost no private-sector fallback when government schemes are cut.
+      {% else %}
+        — with literacy at {{ result.literacy }}%, residents have limited capacity
+        to navigate alternative schemes or formal employment.
+      {% endif %}
+    </div>
+  </div>
+ 
+  {% else %}
+ 
+  <div class="card">
+    <div class="empty">
+      <div class="empty-icon">&#9654;</div>
+      Select a district and run the simulation to see impact results.
+    </div>
+  </div>
+ 
+  {% endif %}
+ 
+</div>
+ 
+<script>
+  /* slider live update */
+  const slider  = document.getElementById("cut-slider");
+  const cutVal  = document.getElementById("cut-val");
+  const cutDisp = document.getElementById("cut-display");
+ 
+  function updateSlider() {
+    const v   = slider.value;
+    const pct = ((v - slider.min) / (slider.max - slider.min) * 100).toFixed(1);
+    slider.style.setProperty("--pct", pct + "%");
+    cutVal.textContent  = v;
+    cutDisp.textContent = v;
+  }
+  slider.addEventListener("input", updateSlider);
+  updateSlider();
+ 
+  /* program pills */
+  document.querySelectorAll(".pill").forEach(p => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll(".pill").forEach(x => x.classList.remove("active"));
+      p.classList.add("active");
+      document.getElementById("prog-input").value = p.dataset.prog;
+    });
+  });
+ 
+  /* auto-submit on district change */
+  document.getElementById("district-sel").addEventListener("change", () => {
+    document.getElementById("sim-form").submit();
+  });
+</script>
+</body>
+</html>
