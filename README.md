@@ -44,13 +44,10 @@ How to Run
 1. Clone the repo
 git clone https://github.com/your-username/policy-impact-simulator-india.git
 cd policy-impact-simulator-india
-
 2. Install dependencies
 pip install pandas flask
-
 3. Run the app
 python app.py
-
 4. Open in browser
 http://127.0.0.1:5000/
 
